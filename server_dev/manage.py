@@ -1,5 +1,7 @@
-#!/usr/bin/env python
+#!/../venv/bin/ python
 """Django's command-line utility for administrative tasks."""
+
+import django
 import os
 import sys
 
@@ -7,7 +9,7 @@ import sys
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server_dev.settings')
     try:
-        from django import execute_from_command_line
+        from django.core.management import execute_from_command_line
     except ImportError as exc:
         raise ImportError(
             "Couldn't import Django. Are you sure it's installed and "
