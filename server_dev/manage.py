@@ -1,7 +1,8 @@
 #!/../venv/bin/ python
 """Django's command-line utility for administrative tasks."""
 
-import django
+# import django
+
 import os
 import sys
 
