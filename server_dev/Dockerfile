@@ -1,5 +1,5 @@
 # /docker-server/server_dev/Dockerfile
-FROM python:3.6.7
+FROM python:3.7.3
 
 ENV PYTHONUNBUFFERED 1
 
