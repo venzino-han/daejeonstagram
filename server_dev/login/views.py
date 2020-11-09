@@ -5,15 +5,22 @@ from rest_framework.decorators import api_view
 
 from rest_framework.views import APIView
 from .models import User
+from .serializers import UserSerializer
+
 from django.contrib.auth.hashers import make_password, check_password
 
 
-# from .serializers import PlaceSerializer
+from django.http import JsonResponse
+from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
+
+
 
 # Create your views here.
 @api_view(['GET'])
 def helloLogin(request):
     return Response("Login API")
+
 
 class AppLogin(APIView):
     def post(self, request):
@@ -23,14 +30,21 @@ class AppLogin(APIView):
         user = User.objects.filter(userEmail=userEmail).first()
 
         if user is None:
-            return Response(dict(mag="No user"))
+            # return Response(dict(mag="No user"))
+            return JsonResponse({'result': 0, 'msg': "No user"},
+                                safe=False, status=status.HTTP_404_NOT_FOUND)
 
         if check_password(pw, user.pw):
-            return Response(dict(msg='Login success'))
+            #return Response(dict(msg='Login success'))
+
+            #return user id
+            uid = user.id
+            return JsonResponse({'result': 1, 'uid': uid, 'msg': 'Login success'},
+                                status=status.HTTP_202_ACCEPTED)
         else:
-            return Response(dict(msg='Login Fail'))
-
-
+            # return Response(dict(msg='Login Fail'))
+            return JsonResponse({'result': 0, 'msg': 'Login Fail'},
+                                safe=False, status=status.HTTP_404_NOT_FOUND)
 
 
 class RegistUser(APIView):
@@ -51,10 +65,12 @@ class RegistUser(APIView):
 
         user = User.objects.filter(userEmail=userEmail).first()
         if user is not None:
-            return Response(dict(msg="Same email exist"))
+            # return Response(dict(msg="Same email exist"))
+            return JsonResponse({'result': 0, 'msg': 'Same email exist'},
+                                safe=False, status=status.HTTP_409_CONFLICT)
 
         try:
-            User.objects.create(
+            user = User.objects.create(
                 userName=userName,
                 userEmail=userEmail,
                 pw=pw_encryted,
@@ -63,18 +79,11 @@ class RegistUser(APIView):
                 userType=userType,
             )
         except:
-            return Response("Fail to create suer")
+            return JsonResponse({'result': 0, 'msg': 'Same email exist'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-        data = dict(
-            userName=userName,
-            userEmail=userEmail,
-            pw=pw_encryted,
-            gender=gender,
-            birth=birth,
-            userType=userType,
-        )
-
-        return Response(data)
+        serializer = UserSerializer(user)
+        return JsonResponse({'result': 1, 'user': serializer.data ,  'msg': 'Sign in success'},
+                                status=status.HTTP_201_CREATED)
 
 
