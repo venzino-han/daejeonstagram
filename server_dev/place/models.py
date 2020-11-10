@@ -1,7 +1,5 @@
 from django.db import models
-from django.apps import apps
-# from login.models import User
-# Create your models here.
+from django.utils import timezone
 
 class Place(models.Model):
     placeName = models.CharField(max_length=40, null=False, default=False)
@@ -12,6 +10,19 @@ class Place(models.Model):
     lon = models.FloatField(null=False)
     regUserId = models.ForeignKey('login.User', on_delete=models.DO_NOTHING)
     body = models.TextField()
+    timeStamp = models.DateTimeField(default=timezone.now)
     class Meta:
         db_table = 'place'
         verbose_name = 'place info table'
+
+class Review(models.Model):
+    kakaoId = models.ForeignKey(Place, on_delete=models.DO_NOTHING)
+    userId = models.ForeignKey('login.User', on_delete=models.DO_NOTHING)
+    star = models.FloatField(null=False)
+    body = models.TextField()
+    timeStamp = models.DateTimeField(default=timezone.now)
+    class Meta:
+        db_table = 'review'
+        verbose_name = 'place review table'
+
+
