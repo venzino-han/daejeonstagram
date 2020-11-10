@@ -9,4 +9,4 @@ class PlaceSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ('kakaoId', 'userId', 'star', 'body', 'timeStamp')
+        fields = ('kakaoId', 'userId', 'star', 'body', 'timeStamp', 'last')

@@ -21,6 +21,7 @@ class Review(models.Model):
     star = models.FloatField(null=False)
     body = models.TextField()
     timeStamp = models.DateTimeField(default=timezone.now)
+    last = models.IntegerField()
     class Meta:
         db_table = 'review'
         verbose_name = 'place review table'

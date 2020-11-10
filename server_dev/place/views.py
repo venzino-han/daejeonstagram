@@ -80,6 +80,8 @@ class ReviewManage(APIView):
 
     def post(self, request):
         # get uid and add review
+        #set flag : object exist or not
+        edit = 0
 
         #check user
         uid = int(request.query_params['userId'])
@@ -95,23 +97,26 @@ class ReviewManage(APIView):
             return JsonResponse({'result': 0, 'msg': 'No place'},
                                 safe=False, status=status.HTTP_404_NOT_FOUND)
 
-        # user already submit review
-        if Review.objects.filter(kakaoId=place, userId=user).first() :
-            return JsonResponse({'result': 0, 'msg': 'Review exist'},
-                                safe=False, status=status.HTTP_409_CONFLICT)
+        # user already submit review --> change edit mode
+        lastReview = Review.objects.filter(kakaoId=place, userId=user, last=1).first()
+        if lastReview:
+            edit = 1
+            lastReview.update(last=0)
 
         try:
             reviewData = dict(request.GET.items())
             reviewData['userId'] = user
             reviewData['kakaoId'] = place
             reviewData['star'] = float(request.query_params['star'])
-            print(reviewData)
+            reviewData['last'] = 1
             review = Review(**reviewData)
             review.save()
             review = ReviewSerializer(review)
 
-            return JsonResponse({'result': 1, 'review': "review.data" ,'msg': 'Place review register success'},
-                                    safe=False, status=status.HTTP_201_CREATED)
+            return JsonResponse({'result': 1, 'edit': edit,
+                                'review': review.data,
+                                'msg': 'Place review register success'},
+                                safe=False, status=status.HTTP_201_CREATED)
 
         except:
             return JsonResponse({'result': 0, 'msg': 'Place review add error'},
