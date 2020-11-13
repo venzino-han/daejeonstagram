@@ -1,7 +1,6 @@
 import requests
 
-def getLatLng(params):
-    result = ""
+def getLatLog(params):
     # url = 'https://dapi.kakao.com/v2/local/search/address.json?query=' + address
     #url = "https://dapi.kakao.com/v2/local/search/keyword.json?y=36.3542446&x=127.3754091&radius=10000&query=약국"
     with open('kakaoKey.txt', 'r') as f:
@@ -29,14 +28,14 @@ def getLatLng(params):
 
 
 
-params = dict(y=36.3542446,
-              x=127.3754091,
-              radius=10000,
-              query= "약국"
+params = dict(y=36.3519,
+              x=127.3804,
+              radius=5000,
+              query= "카페"
               )
 
 # 카카오 REST API로 좌표 구하기
-items = getLatLng(params)
+items = getLatLog(params)
 
 URL = 'http://127.0.0.1:8000/place/'
 

@@ -10,6 +10,10 @@ from django.http import JsonResponse
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 
+from django.db.models import Avg
+
+from .crud import  *
+
 from login.models import User
 
 
@@ -17,7 +21,8 @@ class PlaceManage(APIView):
 # get Place by id
     def get(self, request):
         kakaoId = request.query_params['kakaoId']
-        place = Place.objects.filter(kakaoId=kakaoId).first()
+        # place = Place.objects.filter(kakaoId=kakaoId).first()
+        place = read(Place,{'kakaoId':request.query_params['kakaoId']})
         if not place :
             return JsonResponse({'result': 0, 'msg': "No place"},
                                 safe=False, status=status.HTTP_404_NOT_FOUND)
@@ -97,11 +102,12 @@ class ReviewManage(APIView):
             return JsonResponse({'result': 0, 'msg': 'No place'},
                                 safe=False, status=status.HTTP_404_NOT_FOUND)
 
-        # user already submit review --> change edit mode
-        lastReview = Review.objects.filter(kakaoId=place, userId=user, last=1).first()
-        if lastReview:
-            edit = 1
-            lastReview.update(last=0)
+        # # user already submit review --> change edit mode
+        # lastReview = Review.objects.filter(kakaoId=place, userId=user, last=1).first()
+        # if lastReview:
+        #     edit = 1
+        #     lastReview.last=0
+        #     lastReview.save()
 
         try:
             reviewData = dict(request.GET.items())
@@ -121,3 +127,60 @@ class ReviewManage(APIView):
         except:
             return JsonResponse({'result': 0, 'msg': 'Place review add error'},
                                 safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+import requests
+from .recommend import *
+
+class RecommendPlace(APIView):
+
+    # get recommendable place based on user position
+    # userId lat lon
+    # def __init__(self):
+    #     with open('./kakaoKey.txt', 'r') as f:
+    #         self.rest_api_key = f.read().strip()
+
+    def get(self, request):
+        x = request.query_params['x']
+        y = request.query_params['y']
+        key = request.query_params['key']
+
+        datas = getNearPlace(x ,y ,key)
+
+        ids = [ d['id'] for d in datas ]
+
+        placeInDB = []
+        places = Place.objects.filter(kakaoId__in=set(ids))
+        for p in places :
+            #get stars of each items
+            placeInDB.append(p)
+
+        if len(placeInDB) > 0:
+            # get stars
+            stars=[]
+            for p in placeInDB:
+                pid = p.kakaoId
+                star = Review.objects.filter(kakaoId=pid)\
+                    .aggregate(Avg('star'))['star__avg']
+
+                print([pid, star])
+                if star and star >= 3:
+                    stars.append([pid, round(star,2)])
+
+            if stars != []:
+                stars = sorted(stars, key= lambda x: x[1])
+                return JsonResponse({'result': 1, 'rdbdata': stars, 'kakaoData': datas ,'msg': 'Check Place'},
+                                    safe=False, status=status.HTTP_200_OK)
+            else:
+                return JsonResponse({'result': 0, 'data': datas, 'msg': 'No stared place in DB'},
+                                    safe=False, status=status.HTTP_200_OK)
+
+        else :
+            return JsonResponse({'result': 0, 'data': datas ,'msg': 'No place in DB'},
+                          safe = False, status = status.HTTP_200_OK)
+
+
+    #get user satisfaction for the recommendation
+    # recoId, point(0-5)
+    # def post(self, request):
+    #     pass
